@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+<meta name="theme-color" content="#121417">
+<title>Central de Marcação — Gravação a Laser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Stardos+Stencil:wght@400;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <button class="icon-btn" id="btnOpenLeft" aria-label="Modelos salvos" title="Modelos salvos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-title">Central de Marcação</div>
+    </div>
+
+    <div class="plate-settings">
+      <label><span class="plate-label">Placa</span>
+        <input type="number" id="plateW" class="num-input" value="380" min="10" max="1000" inputmode="numeric"> ×
+        <input type="number" id="plateH" class="num-input" value="380" min="10" max="1000" inputmode="numeric">
+      </label>
+    </div>
+
+    <button class="icon-btn always history-btn" id="btnUndo" aria-label="Desfazer" title="Desfazer (Ctrl+Z)" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
+      <span class="history-label">Desfazer</span>
+    </button>
+    <button class="icon-btn always history-btn" id="btnRedo" aria-label="Refazer" title="Refazer (Ctrl+Shift+Z)" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg>
+      <span class="history-label">Refazer</span>
+    </button>
+
+    <div class="topbar-spacer"></div>
+
+    <div class="theme-toggle" role="group" aria-label="Tema">
+      <button id="themeDark" aria-label="Tema escuro" title="Tema escuro">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <div class="div"></div>
+      <button id="themeLight" aria-label="Tema claro" title="Tema claro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+
+    <div class="menu-wrap">
+      <button class="btn btn-download" id="btnDownload" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="dl-label">Baixar</span>
+      </button>
+      <div class="menu" id="downloadMenu" role="menu">
+        <button type="button" data-dl="png300" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span class="mi">PNG 300 DPI<small>Padrão para o LaserGRBL</small></span>
+        </button>
+        <button type="button" data-dl="png600" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span class="mi">PNG 600 DPI<small>Mais detalhe, arquivo maior</small></span>
+        </button>
+        <div class="menu-sep"></div>
+        <button type="button" data-dl="svg" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+          <span class="mi">SVG vetorial<small>LightBurn, Illustrator, Inkscape</small></span>
+        </button>
+      </div>
+    </div>
+
+    <button class="icon-btn" id="btnOpenRight" aria-label="Propriedades" title="Propriedades">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+    </button>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <div class="main">
+    <aside class="sidebar left" id="sidebarLeft">
+      <div class="sidebar-head">
+        <h2>Modelos salvos</h2>
+        <button class="icon-btn drawer-close" id="closeLeft" aria-label="Fechar painel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-body" id="tmplList"></div>
+      <div class="sidebar-foot">
+        <button class="btn primary" id="btnSaveTmpl" style="width:100%;">Salvar modelo</button>
+        <button class="btn" id="btnNew" style="width:100%; margin-top:7px;">Nova marcação</button>
+      </div>
+    </aside>
+
+    <div class="stage">
+      <div class="stage-toolbar">
+        <button class="btn small primary" id="btnAddText">＋ Texto</button>
+        <button class="btn small" id="btnAddImage">＋ Imagem</button>
+        <button class="btn small qr-quick" id="btnAddQR" title="Gerar QR Code">▦ QR Code</button>
+        <input type="file" id="fileImageInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" style="display:none;">
+
+        <button class="btn small mobile-history-btn" id="btnUndoMobile" aria-label="Desfazer" title="Desfazer" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg>
+          Desfazer
+        </button>
+        <button class="btn small mobile-history-btn" id="btnRedoMobile" aria-label="Refazer" title="Refazer" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 1 1-3-7.7L21 8"/></svg>
+          Refazer
+        </button>
+
+        <div class="divider"></div>
+        <button class="btn small" id="btnDupQuick" disabled title="Duplicar elemento selecionado">⎘ Duplicar</button>
+        <button class="btn small" id="btnCenterQuick" disabled title="Centralizar na peça">⊕ Centralizar</button>
+        <button class="btn small" id="btnFrontQuick" disabled title="Trazer para frente">↑ Frente</button>
+        <button class="btn small" id="btnBackQuick" disabled title="Enviar para trás">↓ Trás</button>
+
+        <div class="divider"></div>
+        <button class="btn small" id="btnZoomOut" aria-label="Diminuir zoom">－</button>
+        <span class="zoom-readout" id="zoomReadout">100%</span>
+        <button class="btn small" id="btnZoomIn" aria-label="Aumentar zoom">＋</button>
+        <button class="btn small" id="btnZoomFit">Ajustar</button>
+        <div class="divider"></div>
+        <label class="chk"><input type="checkbox" id="chkGrid" checked> grade</label>
+        <label class="chk"><input type="checkbox" id="chkSnap" checked> encaixe 5mm</label>
+      </div>
+      <div class="stage-canvas-wrap" id="canvasWrap">
+        <svg class="artboard" id="artboard"></svg>
+      </div>
+    </div>
+
+    <aside class="sidebar right" id="sidebarRight">
+      <div class="sidebar-head">
+        <h2>Propriedades</h2>
+        <button class="icon-btn drawer-close" id="closeRight" aria-label="Fechar painel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sidebar-body" id="propsBody"></div>
+      <div>
+        <div class="sidebar-head" style="border-top:1px solid var(--border-soft); padding-top:12px;"><h2>Campos na peça</h2></div>
+        <div class="layer-list" id="layerList"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="dialog-backdrop" id="appDialog" aria-hidden="true">
+  <section class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogMessage">
+    <div class="dialog-head">
+      <div class="dialog-icon" id="dialogIcon">?</div>
+      <div class="dialog-copy">
+        <h3 class="dialog-title" id="dialogTitle">Confirmar</h3>
+        <p class="dialog-message" id="dialogMessage"></p>
+      </div>
+    </div>
+    <div class="dialog-body" id="dialogBody"></div>
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="dialogCancel">Cancelar</button>
+      <button type="button" class="btn primary" id="dialogConfirm">Confirmar</button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
