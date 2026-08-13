@@ -13,7 +13,8 @@ export function createExporter(deps){
     });
   }
 
-  async function exportSVG(){
+  async function exportSVG(opts){
+    const transparent = !!(opts && opts.transparent);
     if(!state.fields.length){ showToast("Nada para exportar ainda"); return; }
     await fontsReady();
     const out = document.createElementNS(SVGNS, "svg");
@@ -22,7 +23,7 @@ export function createExporter(deps){
     out.setAttribute("width", state.plateW+"mm");
     out.setAttribute("height", state.plateH+"mm");
     out.setAttribute("viewBox", `0 0 ${state.plateW} ${state.plateH}`);
-    out.appendChild(el("rect", {x:0, y:0, width:state.plateW, height:state.plateH, fill:"#ffffff"}));
+    if(!transparent) out.appendChild(el("rect", {x:0, y:0, width:state.plateW, height:state.plateH, fill:"#ffffff"}));
 
     const INK = "#000000";
     state.fields.forEach(f => {
@@ -108,11 +109,18 @@ export function createExporter(deps){
     });
 
     const src = new XMLSerializer().serializeToString(out);
-    download(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+src], {type:"image/svg+xml"}), filename()+".svg");
+    download(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+src], {type:"image/svg+xml"}), filename()+(transparent?"-transparente":"")+".svg");
     showToast("SVG exportado");
   }
 
-  async function exportPNG(dpi){
+  const RASTER_MIME = {png:"image/png", jpeg:"image/jpeg", webp:"image/webp"};
+  const RASTER_EXT = {png:"png", jpeg:"jpg", webp:"webp"};
+
+  // format: "png" | "jpeg" | "webp". JPEG não tem canal alfa — ignora
+  // transparent e sempre desenha fundo branco, mesmo se pedido.
+  async function exportRaster(format, dpi, opts){
+    const requestTransparent = !!(opts && opts.transparent);
+    const transparent = requestTransparent && format !== "jpeg";
     if(!state.fields.length){ showToast("Nada para exportar ainda"); return; }
     await fontsReady();
     const k = dpi/25.4;
@@ -120,8 +128,10 @@ export function createExporter(deps){
     canvas.width = Math.round(state.plateW*k);
     canvas.height = Math.round(state.plateH*k);
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(!transparent){
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+    }
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
 
@@ -212,11 +222,13 @@ export function createExporter(deps){
       return;
     }
 
+    const ext = RASTER_EXT[format], mime = RASTER_MIME[format];
+    const quality = format === "png" ? undefined : 0.92;
     canvas.toBlob(blob => {
-      if(!blob){ showToast("Falha ao gerar o PNG"); return; }
-      download(blob, filename()+`-${dpi}dpi.png`);
-      showToast(`PNG ${dpi} DPI exportado`);
-    }, "image/png");
+      if(!blob){ showToast(`Falha ao gerar o ${ext.toUpperCase()}`); return; }
+      download(blob, filename()+`-${dpi}dpi`+(transparent?"-transparente":"")+`.${ext}`);
+      showToast(`${ext.toUpperCase()} ${dpi} DPI exportado`);
+    }, mime, quality);
   }
 
   function filename(){
@@ -233,5 +245,5 @@ export function createExporter(deps){
     setTimeout(() => URL.revokeObjectURL(url), 3000);
   }
 
-  return { exportSVG, exportPNG };
+  return { exportSVG, exportRaster };
 }
