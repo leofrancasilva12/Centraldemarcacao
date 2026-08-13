@@ -55,6 +55,11 @@
         <span class="dl-label">Baixar</span>
       </button>
       <div class="menu" id="downloadMenu" role="menu">
+        <label class="menu-check-row" id="chkTransparentRow">
+          <input type="checkbox" id="chkTransparentBg">
+          <span class="mi">Fundo transparente<small>Não se aplica ao JPG</small></span>
+        </label>
+        <div class="menu-sep"></div>
         <button type="button" data-dl="png300" role="menuitem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           <span class="mi">PNG 300 DPI<small>Padrão para o LaserGRBL</small></span>
@@ -62,6 +67,14 @@
         <button type="button" data-dl="png600" role="menuitem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
           <span class="mi">PNG 600 DPI<small>Mais detalhe, arquivo maior</small></span>
+        </button>
+        <button type="button" data-dl="webp" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span class="mi">WebP<small>Leve, com transparência</small></span>
+        </button>
+        <button type="button" data-dl="jpg" role="menuitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span class="mi">JPG<small>Compatível com tudo, fundo sempre branco</small></span>
         </button>
         <div class="menu-sep"></div>
         <button type="button" data-dl="svg" role="menuitem">

@@ -1,5 +1,7 @@
 // @ts-nocheck — manipulação de DOM genérica (getElementById/eventos sem narrowing); só a camada de dados é checada (ver js/editor/types.js).
 import { readImageFile } from "../image-tools.js";
+import { EXPORT_TRANSPARENT_KEY } from "./constants.js";
+import { loadPreference, savePreference } from "../storage.js";
 
 // Barra de ferramentas do stage: adicionar campos, ações rápidas de seleção,
 // menu de download e os inputs de tamanho da placa.
@@ -72,9 +74,21 @@ export function createToolbar(ctx){
   }
   document.addEventListener("click", closeAllMenus);
 
+  // Fundo transparente: opção lembrada entre sessões, como o tema.
+  const chkTransparent = document.getElementById("chkTransparentBg");
+  chkTransparent.checked = loadPreference(EXPORT_TRANSPARENT_KEY) === "1";
+  chkTransparent.addEventListener("change", () => {
+    savePreference(EXPORT_TRANSPARENT_KEY, chkTransparent.checked ? "1" : "0");
+  });
+  // Clicar na opção não deve fechar o menu (o usuário ainda vai escolher o formato).
+  document.getElementById("chkTransparentRow").addEventListener("click", e => e.stopPropagation());
+
   setupMenu("btnDownload", "downloadMenu", fmt => {
-    if(fmt === "svg") ctx.exportSVG();
-    else ctx.exportPNG(fmt === "png600" ? 600 : 300);
+    const transparent = chkTransparent.checked;
+    if(fmt === "svg") ctx.exportSVG({transparent});
+    else if(fmt === "webp") ctx.exportRaster("webp", 600, {transparent});
+    else if(fmt === "jpg") ctx.exportRaster("jpeg", 300, {transparent});
+    else ctx.exportRaster("png", fmt === "png600" ? 600 : 300, {transparent});
   }, "dl");
 
   document.getElementById("btnUndo").addEventListener("click", () => ctx.undo());

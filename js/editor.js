@@ -76,12 +76,12 @@ export function initEditor(){
   Object.assign(ctx, createTheme(ctx));
   Object.assign(ctx, createTemplates(ctx));
 
-  const { exportSVG, exportPNG } = createExporter({
+  const { exportSVG, exportRaster } = createExporter({
     state, SVGNS, XLINK, el: ctx.el, isBox: ctx.isBox, shownText: ctx.shownText,
     codeMatrix: ctx.codeMatrix, loadTemplates: ctx.loadTemplates, showToast: ctx.showToast,
   });
   ctx.exportSVG = exportSVG;
-  ctx.exportPNG = exportPNG;
+  ctx.exportRaster = exportRaster;
 
   Object.assign(ctx, createToolbar(ctx));
   createKeyboard(ctx);
