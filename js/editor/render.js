@@ -3,7 +3,7 @@ import { MARGIN, SVGNS, XLINK } from "./constants.js";
 
 // Desenha o estado atual (placa, grade, réguas e campos) no <svg id="artboard">.
 export function createRenderer(ctx){
-  const { state, svg, getField, totalW, totalH, bboxOf, shownText, codeMatrix } = ctx;
+  const { state, svg, totalW, totalH, bboxOf, shownText, codeMatrix } = ctx;
 
   function el(tag, attrs){
     const n = document.createElementNS(SVGNS, tag);
@@ -14,7 +14,7 @@ export function createRenderer(ctx){
   function renderAll(){ renderCanvas(); ctx.renderLayers(); ctx.renderProps(); updateSelectionActionButtons(); }
 
   function updateSelectionActionButtons(){
-    const hasSel = !!getField(state.selectedId);
+    const hasSel = state.selectedIds.length > 0;
     ["btnDupQuick","btnCenterQuick","btnFrontQuick","btnBackQuick"].forEach(id => {
       const btn = document.getElementById(id);
       if(btn) btn.disabled = !hasSel;
@@ -41,8 +41,52 @@ export function createRenderer(ctx){
       else if(f.type === "code") drawCode(f);
     });
 
+    drawGroupSelectionChrome();
+    drawMarquee();
+
     document.getElementById("zoomReadout").textContent = Math.round(state.zoom*100) + "%";
     ctx.attachCanvasHandlers();
+  }
+
+  // Caixa única com alças de redimensionar ao redor de toda a seleção,
+  // quando há mais de um campo selecionado (o "grupo" no estilo Canva).
+  function drawGroupSelectionChrome(){
+    const selected = ctx.getSelectedFields();
+    if(selected.length < 2) return;
+    const gb = ctx.groupOuterBox(selected);
+    const b = {x:MARGIN+gb.x, y:MARGIN+gb.y, w:gb.w, h:gb.h};
+    const g = el("g", {});
+    g.appendChild(el("rect", {x:b.x, y:b.y, width:b.w, height:b.h, class:"sel-box group-sel-box"}));
+
+    const touch = window.innerWidth <= 760;
+    const hitSize = touch ? 12 : 8;
+    const handleR = touch ? 2.35 : 1.8;
+    const corners = [
+      {name:"tl", x:b.x, y:b.y},
+      {name:"tr", x:b.x+b.w, y:b.y},
+      {name:"bl", x:b.x, y:b.y+b.h},
+      {name:"br", x:b.x+b.w, y:b.y+b.h}
+    ];
+    corners.forEach(c => {
+      const hit = el("rect", {x:c.x-hitSize/2, y:c.y-hitSize/2, width:hitSize, height:hitSize, class:"corner-hit"});
+      hit.dataset.role = "group-resize-corner";
+      hit.dataset.corner = c.name;
+      g.appendChild(hit);
+      const dot = el("circle", {cx:c.x, cy:c.y, r:handleR, class:"corner-handle"});
+      dot.dataset.role = "group-resize-corner";
+      dot.dataset.corner = c.name;
+      g.appendChild(dot);
+    });
+    svg.appendChild(g);
+  }
+
+  // Retângulo tracejado do laço de seleção (arrastar sobre a placa vazia).
+  function drawMarquee(){
+    const m = ctx.marqueeRect;
+    if(!m) return;
+    svg.appendChild(el("rect", {
+      x:MARGIN+m.x, y:MARGIN+m.y, width:m.w, height:m.h, class:"marquee-rect",
+    }));
   }
 
   function drawGrid(){
@@ -73,7 +117,7 @@ export function createRenderer(ctx){
     t.textContent = shownText(f);
     t.dataset.id = f.id;
     svg.appendChild(t);
-    if(f.id === state.selectedId){
+    if(ctx.isSelected(f.id)){
       const b = bboxOf(f);
       const g = el("g", {transform:`rotate(${f.rotation} ${px} ${py})`});
       addSelectionChrome(g, b, f, {x:px, y:py}, true);
@@ -89,8 +133,11 @@ export function createRenderer(ctx){
   }
 
   function addSelectionChrome(g, b, f, pivot, showAnchor){
-    if(f.id !== state.selectedId) return;
+    if(!ctx.isSelected(f.id)) return;
     g.appendChild(el("rect", {x:b.x, y:b.y, width:b.w, height:b.h, class:"sel-box"}));
+    // Com vários campos selecionados, cada um ganha só o contorno — as alças
+    // de redimensionar/girar aparecem uma única vez, na caixa do grupo.
+    if(state.selectedIds.length > 1) return;
     if(showAnchor) g.appendChild(el("circle", {cx:pivot.x, cy:pivot.y, r:1.4, class:"anchor-dot"}));
 
     const touch = window.innerWidth <= 760;

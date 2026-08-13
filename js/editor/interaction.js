@@ -1,14 +1,20 @@
 // @ts-nocheck — manipulação de DOM genérica (getElementById/eventos sem narrowing); só a camada de dados é checada (ver js/editor/types.js).
 import { MARGIN, SNAP_MM } from "./constants.js";
 
-// Arrastar, redimensionar e girar campos diretamente no artboard SVG.
+// Arrastar, redimensionar e girar campos diretamente no artboard SVG —
+// incluindo seleção múltipla (shift-clique, laço de seleção) e transformação
+// do grupo inteiro (mover, aumentar/diminuir), ao estilo Canva/Figma.
 export function createInteraction(ctx){
   const { state, svg, isBox, clamp, round1, getField, outerBox } = ctx;
 
   let dragging = null, resizing = null, resizeCtx = null, movedDuringDrag = false;
-  const dragOffset = {x:0, y:0};
+  let dragOffset = null, dragFieldsStart = null, pendingNarrowId = null;
+  let resizingGroup = false, groupResizeCtx = null;
+  let marquee = null; // {startX, startY, additive, baseSelection, moved}
   const snapOn = () => document.getElementById("chkSnap").checked;
   const snapVal = v => snapOn() ? Math.round(v/SNAP_MM)*SNAP_MM : Math.round(v*2)/2;
+  const rectsIntersect = (a, b) =>
+    a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
 
   function svgPoint(evt){
     const pt = svg.createSVGPoint();
@@ -22,19 +28,39 @@ export function createInteraction(ctx){
     return {x: cx + dx*Math.cos(rad) - dy*Math.sin(rad), y: cy + dx*Math.sin(rad) + dy*Math.cos(rad)};
   }
 
+  // O campo "agarrado" pelo cursor é o que efetivamente encaixa na grade
+  // (igual ao arraste de um único campo); os demais selecionados seguem
+  // pelo mesmo delta em pixels, preservando a posição relativa entre eles.
+  function beginGroupDrag(evt, grabbedField){
+    const p = svgPoint(evt);
+    dragOffset = {x: p.x - MARGIN - grabbedField.x, y: p.y - MARGIN - grabbedField.y};
+    dragFieldsStart = ctx.getSelectedFields().map(f => ({id:f.id, x:f.x, y:f.y}));
+    dragging = grabbedField.id; movedDuringDrag = false;
+    try{ svg.setPointerCapture(evt.pointerId); }catch(_){}
+  }
+
   function attachCanvasHandlers(){
     svg.querySelectorAll('[data-id]:not([data-role])').forEach(node => {
       node.addEventListener("pointerdown", e => {
         e.preventDefault(); e.stopPropagation();
         const f = getField(node.dataset.id);
         if(!f) return;
-        const p = svgPoint(e);
-        dragOffset.x = p.x - MARGIN - f.x;
-        dragOffset.y = p.y - MARGIN - f.y;
-        dragging = f.id; movedDuringDrag = false;
-        try{ svg.setPointerCapture(e.pointerId); }catch(_){}
-        if(state.selectedId !== f.id){ state.selectedId = f.id; ctx.renderAll(); }
-        else ctx.renderCanvas();
+        const modifier = e.shiftKey || e.ctrlKey || e.metaKey;
+        pendingNarrowId = null;
+        if(modifier){
+          ctx.toggleSelect(f.id);
+          ctx.renderAll();
+          if(!ctx.isSelected(f.id)) return; // just removed from selection — nothing to drag
+        } else if(!ctx.isSelected(f.id)){
+          ctx.selectOnly(f.id);
+          ctx.renderAll();
+        } else {
+          // Already part of the current selection (maybe several items): keep it
+          // as-is so the whole group can be dragged; narrow to just this one on
+          // pointerup if the user didn't actually drag anything.
+          pendingNarrowId = f.id;
+        }
+        beginGroupDrag(e, f);
       });
     });
 
@@ -73,7 +99,28 @@ export function createInteraction(ctx){
           };
         }
         resizing = f.id; movedDuringDrag = false;
-        if(state.selectedId !== f.id) state.selectedId = f.id;
+        if(!ctx.isSelected(f.id)) ctx.selectOnly(f.id);
+        try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+      });
+    });
+
+    svg.querySelectorAll('[data-role="group-resize-corner"]').forEach(node => {
+      node.addEventListener("pointerdown", e => {
+        e.preventDefault(); e.stopPropagation();
+        const selected = ctx.getSelectedFields();
+        if(selected.length < 2) return;
+        const gb = ctx.groupOuterBox(selected);
+        groupResizeCtx = {
+          centerX: gb.x + gb.w/2,
+          centerY: gb.y + gb.h/2,
+          halfW: Math.max(1, gb.w/2),
+          halfH: Math.max(1, gb.h/2),
+          fields: selected.map(f => ({
+            field:f, startX:f.x, startY:f.y, startW:f.w, startH:f.h,
+            startSize: f.type === "text" ? f.size : null,
+          })),
+        };
+        resizingGroup = true; movedDuringDrag = false;
         try{ svg.setPointerCapture(e.pointerId); }catch(_){}
       });
     });
@@ -81,15 +128,56 @@ export function createInteraction(ctx){
 
   svg.addEventListener("pointermove", e => {
     if(dragging){
-      const f = getField(dragging);
-      if(!f) return;
+      const grabbed = getField(dragging);
+      if(!grabbed){ dragging = null; return; }
       const p = svgPoint(e);
-      const maxX = isBox(f) ? Math.max(0, state.plateW-f.w) : state.plateW;
-      const maxY = isBox(f) ? Math.max(0, state.plateH-f.h) : state.plateH;
-      f.x = clamp(snapVal(p.x - MARGIN - dragOffset.x), 0, maxX);
-      f.y = clamp(snapVal(p.y - MARGIN - dragOffset.y), 0, maxY);
+      const grabbedStart = dragFieldsStart.find(s => s.id === dragging);
+      const maxGX = isBox(grabbed) ? Math.max(0, state.plateW-grabbed.w) : state.plateW;
+      const maxGY = isBox(grabbed) ? Math.max(0, state.plateH-grabbed.h) : state.plateH;
+      // O campo agarrado encaixa na grade normalmente; os demais seguem pelo
+      // mesmo deslocamento em pixels, sem encaixe próprio, para não deformar
+      // as posições relativas dentro do grupo.
+      const newGrabbedX = clamp(snapVal(p.x - MARGIN - dragOffset.x), 0, maxGX);
+      const newGrabbedY = clamp(snapVal(p.y - MARGIN - dragOffset.y), 0, maxGY);
+      const dx = newGrabbedX - grabbedStart.x, dy = newGrabbedY - grabbedStart.y;
+      dragFieldsStart.forEach(start => {
+        const f = getField(start.id);
+        if(!f) return;
+        const maxX = isBox(f) ? Math.max(0, state.plateW-f.w) : state.plateW;
+        const maxY = isBox(f) ? Math.max(0, state.plateH-f.h) : state.plateH;
+        f.x = clamp(round1(start.x + dx), 0, maxX);
+        f.y = clamp(round1(start.y + dy), 0, maxY);
+      });
+      if(Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) movedDuringDrag = true;
+      ctx.renderCanvas();
+      ctx.syncPosInputs(grabbed);
+      return;
+    }
+    if(resizingGroup && groupResizeCtx){
+      const p = svgPoint(e);
+      const localX = p.x-MARGIN, localY = p.y-MARGIN;
+      const scaleX = Math.max(0.1, Math.abs(localX - groupResizeCtx.centerX) / groupResizeCtx.halfW);
+      const scaleY = Math.max(0.1, Math.abs(localY - groupResizeCtx.centerY) / groupResizeCtx.halfH);
+      const scale = Math.max(scaleX, scaleY); // grupo sempre escala proporcionalmente
+      const {centerX, centerY} = groupResizeCtx;
+      groupResizeCtx.fields.forEach(({field:f, startX, startY, startW, startH, startSize}) => {
+        if(f.type === "text"){
+          f.size = round1(clamp(startSize*scale, 3, 180));
+          f.x = round1(clamp(centerX + (startX-centerX)*scale, 0, state.plateW));
+          f.y = round1(clamp(centerY + (startY-centerY)*scale, 0, state.plateH));
+        } else {
+          const minH = f.type === "shape" && f.shape === "line" ? 0 : 1;
+          const newW = clamp(round1(startW*scale), 1, 2000);
+          const newH = clamp(round1(startH*scale), minH, 2000);
+          const cx = centerX + (startX + startW/2 - centerX)*scale;
+          const cy = centerY + (startY + startH/2 - centerY)*scale;
+          f.w = newW; f.h = newH;
+          f.x = round1(clamp(cx - newW/2, 0, Math.max(0, state.plateW-newW)));
+          f.y = round1(clamp(cy - newH/2, 0, Math.max(0, state.plateH-newH)));
+        }
+      });
       movedDuringDrag = true;
-      ctx.renderCanvas(); ctx.syncPosInputs(f);
+      ctx.renderCanvas();
       return;
     }
     if(resizing){
@@ -134,15 +222,36 @@ export function createInteraction(ctx){
         movedDuringDrag = true;
         ctx.renderCanvas(); ctx.syncPosInputs(f);
       }
+      return;
+    }
+    if(marquee){
+      const p = svgPoint(e);
+      const x1 = Math.min(marquee.startX, p.x-MARGIN), x2 = Math.max(marquee.startX, p.x-MARGIN);
+      const y1 = Math.min(marquee.startY, p.y-MARGIN), y2 = Math.max(marquee.startY, p.y-MARGIN);
+      if(Math.abs((p.x-MARGIN)-marquee.startX) > 0.5 || Math.abs((p.y-MARGIN)-marquee.startY) > 0.5) marquee.moved = true;
+      ctx.marqueeRect = {x:x1, y:y1, w:x2-x1, h:y2-y1};
+      const hits = state.fields.filter(f => rectsIntersect(ctx.marqueeRect, outerBox(f))).map(f => f.id);
+      ctx.selectMany(marquee.additive ? Array.from(new Set([...marquee.baseSelection, ...hits])) : hits);
+      ctx.renderCanvas(); ctx.renderLayers();
     }
   });
 
   function endPointer(){
-    if(dragging || resizing){
+    if(dragging || resizing || resizingGroup){
       ctx.renderLayers();
       if(movedDuringDrag) ctx.commit();
+      else if(dragging && pendingNarrowId){ ctx.selectOnly(pendingNarrowId); ctx.renderAll(); }
     }
-    dragging = null; resizing = null; resizeCtx = null; movedDuringDrag = false;
+    if(marquee){
+      ctx.marqueeRect = null;
+      if(!marquee.moved && !marquee.additive){ ctx.clearSelection(); ctx.renderAll(); }
+      else ctx.renderCanvas();
+      marquee = null;
+    }
+    dragging = null; resizing = null; resizeCtx = null;
+    resizingGroup = false; groupResizeCtx = null;
+    dragOffset = null; dragFieldsStart = null; pendingNarrowId = null;
+    movedDuringDrag = false;
   }
   svg.addEventListener("pointerup", endPointer);
   svg.addEventListener("pointercancel", endPointer);
@@ -152,7 +261,14 @@ export function createInteraction(ctx){
     const t = e.target;
     if(t === svg || t.classList.contains("plate-rect") || t.classList.contains("grid-line") ||
        t.classList.contains("ruler-tick") || t.classList.contains("ruler-text")){
-      if(state.selectedId !== null){ state.selectedId = null; ctx.renderAll(); }
+      const p = svgPoint(e);
+      marquee = {
+        startX: p.x-MARGIN, startY: p.y-MARGIN,
+        additive: e.shiftKey || e.ctrlKey || e.metaKey,
+        baseSelection: state.selectedIds.slice(),
+        moved: false,
+      };
+      try{ svg.setPointerCapture(e.pointerId); }catch(_){}
     }
   });
 

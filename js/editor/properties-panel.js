@@ -5,18 +5,51 @@ import { readImageFile, removeImageBackground } from "../image-tools.js";
 // Painel de propriedades (direita): um construtor de formulário por tipo de
 // campo, mais as seções compartilhadas (alinhar / ordem / duplicar-excluir).
 export function createPropertiesPanel(ctx){
-  const { state, getField, clamp, round1, esc, propsBody, outerBox, codeMatrix } = ctx;
+  const { state, clamp, round1, esc, propsBody, outerBox, codeMatrix } = ctx;
 
   function renderProps(){
-    const f = getField(state.selectedId);
-    if(!f){
+    const selected = ctx.getSelectedFields();
+    if(!selected.length){
       propsBody.innerHTML = `<div class="props-empty"><span class="big">＋</span>Nada selecionado.<br>Adicione um elemento pela barra de ferramentas, ou toque em um item na placa.</div>`;
       return;
     }
+    if(selected.length > 1){ propsBatch(selected); return; }
+    const f = selected[0];
     if(f.type === "text") propsText(f);
     else if(f.type === "image") propsImage(f);
     else if(f.type === "shape") propsShape(f);
     else propsCode(f);
+  }
+
+  // Painel de propriedades quando vários campos estão selecionados: em vez
+  // do formulário por tipo, mostra as ações que fazem sentido para o grupo
+  // (arrastar e redimensionar já funcionam direto no canvas).
+  function propsBatch(fields){
+    propsBody.innerHTML = `
+      <div class="props-empty"><span class="big">${fields.length}</span>elementos selecionados</div>
+      <div class="field-group">
+        <button type="button" class="btn small" id="pBatchCenter" style="width:100%;">Centralizar grupo na peça</button>
+      </div>
+      <div class="field-group">
+        <label>Ordem das camadas</label>
+        <div class="field-actions-row">
+          <button type="button" class="btn small" id="pBatchFront">↑ Frente</button>
+          <button type="button" class="btn small" id="pBatchBack">↓ Trás</button>
+        </div>
+      </div>
+      <div class="field-actions-row">
+        <button type="button" class="btn small" id="pBatchDup">Duplicar</button>
+        <button type="button" class="btn small danger" id="pBatchDel">Excluir</button>
+      </div>`;
+
+    document.getElementById("pBatchCenter").addEventListener("click", () => {
+      ctx.centerSelected();
+      ctx.showToast("Grupo centralizado");
+    });
+    document.getElementById("pBatchFront").addEventListener("click", () => ctx.reorderSelected("front"));
+    document.getElementById("pBatchBack").addEventListener("click", () => ctx.reorderSelected("back"));
+    document.getElementById("pBatchDup").addEventListener("click", () => ctx.duplicateSelected());
+    document.getElementById("pBatchDel").addEventListener("click", () => ctx.deleteSelected());
   }
 
   function posRow(f, idX, idY){

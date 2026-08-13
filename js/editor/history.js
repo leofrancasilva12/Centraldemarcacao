@@ -8,7 +8,7 @@ export function createHistory(ctx){
   let history = [], histIndex = -1, historyTimer = null;
 
   function snapshot(){
-    return JSON.stringify({plateW:state.plateW, plateH:state.plateH, fields:state.fields, selectedId:state.selectedId});
+    return JSON.stringify({plateW:state.plateW, plateH:state.plateH, fields:state.fields, selectedIds:state.selectedIds});
   }
   function commit(){
     const snap = snapshot();
@@ -28,7 +28,7 @@ export function createHistory(ctx){
     const data = JSON.parse(snap);
     state.plateW = data.plateW; state.plateH = data.plateH;
     state.fields = data.fields;
-    state.selectedId = data.selectedId;
+    state.selectedIds = data.selectedIds || [];
     state.fields.forEach(f => { delete f._cache; });
     document.getElementById("plateW").value = state.plateW;
     document.getElementById("plateH").value = state.plateH;

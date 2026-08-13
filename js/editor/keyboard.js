@@ -14,9 +14,18 @@ export function createKeyboard(ctx){
       return;
     }
     if(mod && e.key.toLowerCase() === "y"){ e.preventDefault(); ctx.redo(); return; }
-    if(e.key === "Escape"){ ctx.closeAllMenus(); ctx.closeDrawer("left"); ctx.closeDrawer("right"); return; }
-    if(e.key === "Delete" && ctx.state.selectedId && !isEditing()){
-      ctx.deleteField(ctx.state.selectedId);
+    if(mod && e.key.toLowerCase() === "a" && !isEditing()){
+      e.preventDefault();
+      if(ctx.state.fields.length){ ctx.selectAll(); ctx.renderAll(); }
+      return;
+    }
+    if(e.key === "Escape"){
+      ctx.closeAllMenus(); ctx.closeDrawer("left"); ctx.closeDrawer("right");
+      if(ctx.state.selectedIds.length){ ctx.clearSelection(); ctx.renderAll(); }
+      return;
+    }
+    if((e.key === "Delete" || e.key === "Backspace") && ctx.state.selectedIds.length && !isEditing()){
+      ctx.deleteSelected();
       e.preventDefault();
     }
   });

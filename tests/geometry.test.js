@@ -42,4 +42,25 @@ describe("geometry", () => {
     expect(f.x).toBeLessThan(100);
     expect(f.y).toBeLessThan(100);
   });
+
+  it("groupOuterBox unions the outer boxes of several unrotated fields", () => {
+    const { groupOuterBox } = createGeometry(makeCtx());
+    const a = { type:"shape", shape:"rect", x:10, y:10, w:20, h:20, rotation:0 };
+    const b = { type:"shape", shape:"rect", x:50, y:5, w:10, h:10, rotation:0 };
+    expect(groupOuterBox([a, b])).toEqual({ x:10, y:5, w:50, h:25 });
+  });
+
+  it("groupOuterBox accounts for each field's own rotation", () => {
+    const { groupOuterBox } = createGeometry(makeCtx());
+    // A 20x20 square rotated 45° around its own center has a bigger axis-aligned footprint.
+    const rotated = { type:"shape", shape:"rect", x:0, y:0, w:20, h:20, rotation:45 };
+    const gb = groupOuterBox([rotated]);
+    expect(gb.w).toBeGreaterThan(20);
+    expect(gb.h).toBeGreaterThan(20);
+  });
+
+  it("groupOuterBox of an empty list is a degenerate zero box", () => {
+    const { groupOuterBox } = createGeometry(makeCtx());
+    expect(groupOuterBox([])).toEqual({ x:0, y:0, w:0, h:0 });
+  });
 });
