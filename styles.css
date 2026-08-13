@@ -59,6 +59,9 @@
     color:var(--text-dim); cursor:pointer; flex-shrink:0; -webkit-tap-highlight-color:transparent;
   }
   .icon-btn:hover{ color:var(--text); border-color:var(--text-faint); }
+  /* Só no desktop o estado recolhido faz sentido visualmente — no mobile
+     esses mesmos botões abrem/fecham a gaveta, sem relação com aria-pressed. */
+  @media (min-width:1025px){ .icon-btn[aria-pressed="false"]{ color:var(--text-faint); opacity:.55; } }
   .icon-btn svg{ width:17px; height:17px; }
   .icon-btn.always{ display:flex; }
   .icon-btn:disabled{ opacity:.3; cursor:not-allowed; }
@@ -124,11 +127,16 @@
   .theme-toggle button svg{ width:15px; height:15px; }
   .theme-toggle .div{ width:1px; background:var(--border); }
 
-  .main{ display:grid; grid-template-columns:230px minmax(0,1fr) 292px; min-height:0; position:relative; }
+  .main{ display:grid; grid-template-columns:var(--left-w,230px) minmax(0,1fr) var(--right-w,292px);
+    min-height:0; position:relative; transition:grid-template-columns .2s ease; }
+  .main.left-collapsed{ --left-w:0px; }
+  .main.right-collapsed{ --right-w:0px; }
 
   .sidebar{ background:var(--panel); border-right:1px solid var(--border-soft);
-    display:flex; flex-direction:column; min-height:0; }
+    display:flex; flex-direction:column; min-height:0; min-width:0; overflow:hidden; }
   .sidebar.right{ border-right:none; border-left:1px solid var(--border-soft); }
+  .main.left-collapsed .sidebar.left{ border-right-color:transparent; }
+  .main.right-collapsed .sidebar.right{ border-left-color:transparent; }
   .sidebar-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 13px 7px; flex-shrink:0; }
   .sidebar-head h2{ margin:0; font-family:var(--disp); font-size:10.5px; text-transform:uppercase;
     letter-spacing:.08em; color:var(--text-faint); font-weight:600; }
