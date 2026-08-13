@@ -53,7 +53,7 @@ export function createTemplates(ctx){
     state.plateW = t.plateW; state.plateH = t.plateH;
     state.fields = JSON.parse(JSON.stringify(t.fields));
     state.fields.forEach(f => { if(!f.type) f.type = "text"; delete f._cache; });
-    state.selectedId = null; state.activeTemplateId = id;
+    state.selectedIds = []; state.activeTemplateId = id;
     document.getElementById("plateW").value = state.plateW;
     document.getElementById("plateH").value = state.plateH;
     ctx.renderAll(); renderTemplateList(); ctx.fitZoom(); ctx.commit();
@@ -94,7 +94,7 @@ export function createTemplates(ctx){
       });
       if(!ok) return;
     }
-    state.fields = []; state.selectedId = null; state.activeTemplateId = null;
+    state.fields = []; state.selectedIds = []; state.activeTemplateId = null;
     ctx.renderAll(); renderTemplateList(); ctx.commit(); ctx.closeDrawer("left");
   });
 

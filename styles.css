@@ -177,6 +177,8 @@
   .rotate-handle{ fill:var(--panel); stroke:var(--accent); stroke-width:.8; }
   .rotate-hit{ fill:transparent; }
   .hit-pad{ fill:transparent; }
+  .group-sel-box{ stroke-width:.8; stroke-dasharray:1.6 1.2; cursor:move; }
+  .marquee-rect{ fill:var(--accent); fill-opacity:.1; stroke:var(--accent); stroke-width:.4; stroke-dasharray:1.2 1; pointer-events:none; }
 
   .field-group{ margin-bottom:13px; }
   .field-group label{ display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;

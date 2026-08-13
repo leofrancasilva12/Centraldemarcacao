@@ -4,7 +4,7 @@ import { readImageFile } from "../image-tools.js";
 // Barra de ferramentas do stage: adicionar campos, ações rápidas de seleção,
 // menu de download e os inputs de tamanho da placa.
 export function createToolbar(ctx){
-  const { state, clamp, isBox, getField } = ctx;
+  const { state, clamp, isBox } = ctx;
 
   document.getElementById("btnAddText").addEventListener("click", () => ctx.addField(ctx.newText({text:"NOVO TEXTO"})));
   document.getElementById("chkGrid").addEventListener("change", () => ctx.renderCanvas());
@@ -16,25 +16,28 @@ export function createToolbar(ctx){
     ctx.addField(q);
     ctx.showToast("QR Code adicionado — digite o conteúdo em Propriedades");
   });
+  document.getElementById("btnSelectAll").addEventListener("click", () => {
+    if(!state.fields.length){ ctx.showToast("Não há elementos para selecionar"); return; }
+    ctx.selectAll();
+    ctx.renderAll();
+  });
   document.getElementById("btnDupQuick").addEventListener("click", () => {
-    if(state.selectedId) ctx.duplicateField(state.selectedId);
+    if(state.selectedIds.length) ctx.duplicateSelected();
   });
   document.getElementById("btnCenterQuick").addEventListener("click", () => {
-    const f = getField(state.selectedId);
-    if(!f) return;
-    ctx.alignField(f, "hcenter", true);
-    ctx.alignField(f, "vcenter");
-    ctx.showToast("Elemento centralizado");
+    if(!state.selectedIds.length) return;
+    ctx.centerSelected();
+    ctx.showToast(state.selectedIds.length > 1 ? "Grupo centralizado" : "Elemento centralizado");
   });
   document.getElementById("btnFrontQuick").addEventListener("click", () => {
-    if(!state.selectedId) return;
-    ctx.reorderField(state.selectedId, "front");
-    ctx.showToast("Elemento trazido para frente");
+    if(!state.selectedIds.length) return;
+    ctx.reorderSelected("front");
+    ctx.showToast("Trazido para frente");
   });
   document.getElementById("btnBackQuick").addEventListener("click", () => {
-    if(!state.selectedId) return;
-    ctx.reorderField(state.selectedId, "back");
-    ctx.showToast("Elemento enviado para trás");
+    if(!state.selectedIds.length) return;
+    ctx.reorderSelected("back");
+    ctx.showToast("Enviado para trás");
   });
   document.getElementById("fileImageInput").addEventListener("change", e => {
     const file = e.target.files[0];

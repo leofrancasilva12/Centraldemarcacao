@@ -2,6 +2,7 @@ import { createExporter } from "./export.js";
 import { MARGIN, SVGNS, XLINK } from "./editor/constants.js";
 import { createToast } from "./editor/toast.js";
 import { createDialogs } from "./editor/dialogs.js";
+import { createSelection } from "./editor/selection.js";
 import { createGeometry } from "./editor/geometry.js";
 import { createFields } from "./editor/fields.js";
 import { createDrawers } from "./editor/drawers.js";
@@ -32,7 +33,7 @@ export function initEditor(){
   /** @type {EditorState} */
   const state = {
     plateW: 380, plateH: 380,
-    fields: [], selectedId: null,
+    fields: [], selectedIds: [],
     zoom: 1, activeTemplateId: null,
   };
 
@@ -61,6 +62,7 @@ export function initEditor(){
 
   Object.assign(ctx, createToast());
   Object.assign(ctx, createDialogs());
+  Object.assign(ctx, createSelection(ctx));
   Object.assign(ctx, createGeometry(ctx));
   Object.assign(ctx, createFields(ctx));
   Object.assign(ctx, createDrawers());

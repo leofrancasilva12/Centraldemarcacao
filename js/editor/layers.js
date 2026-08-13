@@ -13,9 +13,13 @@ export function createLayers(ctx){
     state.fields.slice().reverse().forEach((f, revIdx) => {
       const i = state.fields.length-1-revIdx;
       const item = document.createElement("div");
-      item.className = "layer-item" + (f.id === state.selectedId ? " active" : "");
+      item.className = "layer-item" + (ctx.isSelected(f.id) ? " active" : "");
       item.innerHTML = `<span class="idx">${i+1}</span>${layerIcon(f)}<span class="lbl">${esc(layerLabel(f))}</span>`;
-      item.addEventListener("click", () => selectField(f.id));
+      item.addEventListener("click", e => {
+        if(e.shiftKey || e.ctrlKey || e.metaKey) ctx.toggleSelect(f.id);
+        else ctx.selectOnly(f.id);
+        ctx.renderAll();
+      });
       list.appendChild(item);
     });
   }
@@ -33,11 +37,5 @@ export function createLayers(ctx){
     return wrap('<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>');
   }
 
-  function selectField(id){
-    if(state.selectedId === id) return;
-    state.selectedId = id;
-    ctx.renderAll();
-  }
-
-  return { renderLayers, layerLabel, layerIcon, selectField };
+  return { renderLayers, layerLabel, layerIcon };
 }

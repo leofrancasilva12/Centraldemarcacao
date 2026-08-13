@@ -75,7 +75,7 @@
  * @property {number} plateW
  * @property {number} plateH
  * @property {Field[]} fields
- * @property {string|null} selectedId
+ * @property {string[]} selectedIds
  * @property {number} zoom
  * @property {string|null} activeTemplateId
  */
