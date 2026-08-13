@@ -1,10 +1,15 @@
 // Ferramentas de imagem locais/offline.
 
+/**
+ * @param {File} file
+ * @returns {Promise<{src:string, naturalW:number, naturalH:number}>}
+ */
 export function readImageFile(file){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const src = reader.result;
+      // readAsDataURL() below always yields a string result, never an ArrayBuffer.
+      const src = /** @type {string} */ (reader.result);
       const img = new Image();
       img.onload = () => resolve({src, naturalW:img.naturalWidth||300, naturalH:img.naturalHeight||300});
       img.onerror = () => resolve({src, naturalW:300, naturalH:300});
