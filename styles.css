@@ -138,7 +138,7 @@
   .theme-toggle button svg{ width:15px; height:15px; }
   .theme-toggle .div{ width:1px; background:var(--border); }
 
-  .main{ display:grid; grid-template-columns:var(--left-w,230px) minmax(0,1fr) var(--right-w,292px);
+  .main{ display:grid; grid-template-columns:var(--left-w,230px) minmax(0,1fr) var(--right-w,230px);
     min-height:0; position:relative; transition:grid-template-columns .2s ease; }
   .main.left-collapsed{ --left-w:0px; }
   .main.right-collapsed{ --right-w:0px; }
