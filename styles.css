@@ -45,6 +45,29 @@
     white-space:nowrap; pointer-events:none; user-select:none;
   }
 
+  /* ================= MODO MANUTENÇÃO ================= */
+  .maintenance-screen{ display:none; }
+  html.maintenance .app{ display:none; }
+  html.maintenance .maintenance-screen{
+    display:flex; align-items:center; justify-content:center;
+    height:100vh; padding:24px; background:var(--bg); color:var(--text);
+  }
+  @supports (height:100dvh){ html.maintenance .maintenance-screen{ height:100dvh; } }
+  .maintenance-card{
+    width:min(420px, 100%); text-align:center;
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:36px 28px; box-shadow:var(--menu-shadow);
+  }
+  .maintenance-icon{
+    width:42px; height:42px; color:var(--accent); margin-bottom:16px;
+  }
+  .maintenance-card h1{
+    margin:0 0 10px; font-family:var(--disp); font-size:19px; font-weight:600; letter-spacing:.01em;
+  }
+  .maintenance-card p{
+    margin:0; color:var(--text-dim); font-size:12.5px; line-height:1.6;
+  }
+
   .topbar{
     display:flex; align-items:center; gap:9px;
     padding:0 12px; height:var(--topbar-h);
