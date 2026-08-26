@@ -7,8 +7,23 @@
 <title>Central de Marcação — Gravação a Laser</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="styles.css">
+<script>
+  // ================= MODO MANUTENÇÃO =================
+  // Para tirar o site do ar temporariamente, troque para true e publique.
+  // Para voltar ao normal, troque de volta para false.
+  window.MAINTENANCE_MODE = false;
+  if (window.MAINTENANCE_MODE) document.documentElement.classList.add("maintenance");
+</script>
 </head>
 <body>
+
+<div class="maintenance-screen" id="maintenanceScreen">
+  <div class="maintenance-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="maintenance-icon"><path d="M14.7 6.3a4 4 0 0 0-5.6 4.6L3 17v4h4l6.1-6.1a4 4 0 0 0 4.6-5.6l-2.8 2.8-2-2z"/></svg>
+    <h1>Em manutenção</h1>
+    <p>O site está temporariamente fora do ar para manutenção.<br>Voltamos em breve — obrigado pela paciência.</p>
+  </div>
+</div>
 
 <div class="app">
   <div class="topbar">
