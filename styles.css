@@ -456,7 +456,8 @@
 
   @media (max-width:520px){
     .topbar{ gap:4px; padding-inline:6px; }
-    .brand{ display:none; }
+    .brand{ gap:0; }
+    .brand-mark{ width:16px; height:16px; }
     .num-input{ width:42px; }
     .theme-toggle button{ width:28px; }
     #btnOpenLeft, #btnOpenRight{ width:38px; height:40px; }
