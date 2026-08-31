@@ -39,6 +39,12 @@
   .app{ display:grid; grid-template-rows:auto 1fr; height:100vh; }
   @supports (height:100dvh){ .app{ height:100dvh; } }
 
+  .app-footer{
+    position:fixed; left:50%; bottom:6px; transform:translateX(-50%); z-index:5;
+    font-size:10px; color:var(--text-faint); letter-spacing:.02em;
+    white-space:nowrap; pointer-events:none; user-select:none;
+  }
+
   /* ================= MODO MANUTENÇÃO ================= */
   .maintenance-screen{ display:none; }
   html.maintenance .app{ display:none; }
