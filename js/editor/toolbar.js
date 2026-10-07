@@ -89,7 +89,7 @@ export function createToolbar(ctx){
     btn.disabled = true;
     try{
       if(fmt === "svg") await ctx.exportSVG({transparent});
-      else if(fmt === "webp") await ctx.exportRaster("webp", 600, {transparent});
+      else if(fmt === "webp") await ctx.exportRaster("webp", 300, {transparent});
       else if(fmt === "jpg") await ctx.exportRaster("jpeg", 300, {transparent});
       else await ctx.exportRaster("png", fmt === "png600" ? 600 : 300, {transparent});
     } finally {
