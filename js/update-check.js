@@ -17,7 +17,8 @@ async function fingerprint(){
   return "hash:" + hash + ":" + text.length;
 }
 
-export function initUpdateCheck(){
+/** @param {{ hasUnsavedWork?: () => boolean }} [opts] */
+export function initUpdateCheck(opts){
   if(document.documentElement.classList.contains("maintenance")) return;
   const banner = document.getElementById("updateBanner");
   const reloadBtn = document.getElementById("updateBannerReload");
@@ -39,7 +40,14 @@ export function initUpdateCheck(){
     }
   }
 
-  reloadBtn.addEventListener("click", () => location.reload());
+  reloadBtn.addEventListener("click", () => {
+    const hasUnsavedWork = opts && opts.hasUnsavedWork;
+    if(hasUnsavedWork && hasUnsavedWork() &&
+      !confirm("Você tem uma marcação na tela que ainda não foi salva como modelo. Atualizar agora e perder essas alterações?")){
+      return;
+    }
+    location.reload();
+  });
   dismissBtn.addEventListener("click", () => {
     dismissed = true;
     banner.classList.remove("show");

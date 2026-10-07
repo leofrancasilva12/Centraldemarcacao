@@ -90,4 +90,6 @@ export function initEditor(){
   ctx.commit();
   requestAnimationFrame(() => ctx.fitZoom());
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => ctx.renderCanvas());
+
+  return { hasUnsavedWork: () => state.fields.length > 0 };
 }
