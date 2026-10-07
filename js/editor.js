@@ -1,5 +1,5 @@
 import { createExporter } from "./export.js";
-import { MARGIN, SVGNS, XLINK } from "./editor/constants.js";
+import { MARGIN } from "./editor/constants.js";
 import { createToast } from "./editor/toast.js";
 import { createDialogs } from "./editor/dialogs.js";
 import { createSelection } from "./editor/selection.js";
@@ -74,11 +74,10 @@ export function initEditor(){
   Object.assign(ctx, createZoom(ctx));
   Object.assign(ctx, createTemplates(ctx));
 
-  const { exportSVG, exportRaster } = createExporter({
-    state, SVGNS, XLINK, el: ctx.el, isBox: ctx.isBox, shownText: ctx.shownText,
+  const { exportRaster } = createExporter({
+    state, isBox: ctx.isBox, shownText: ctx.shownText,
     codeMatrix: ctx.codeMatrix, loadTemplates: ctx.loadTemplates, showToast: ctx.showToast,
   });
-  ctx.exportSVG = exportSVG;
   ctx.exportRaster = exportRaster;
 
   Object.assign(ctx, createToolbar(ctx));
