@@ -5,14 +5,14 @@
     --bg:#FAF9F6; --panel:#FFFFFF; --panel-2:#F3F1EC;
     --border:#E2DFD6; --border-soft:#EDEBE3;
     --text:#1C1E20; --text-dim:#6C7076; --text-faint:#9DA1A6;
-    --accent:#B4650F; --accent-ink:#FFFFFF; --accent-soft:rgba(180,101,15,.10);
+    --accent:#D00C1A; --accent-ink:#FFFFFF; --accent-soft:rgba(208,12,26,.10);
     --go:#1D7A33; --go-ink:#FFFFFF;
     --danger:#C43F2A;
     --plate-bg:#FFFFFF; --plate-line:#EAE7DE; --plate-line-major:#CFC9B9; --plate-ink:#14161A;
     --shadow:0 1px 3px rgba(20,20,15,.07); --drawer-shadow:0 0 30px rgba(0,0,0,.18);
     --menu-shadow:0 8px 28px rgba(20,20,15,.16);
-    /* Cores da marca PetroFusão (faixa do topo e rodapé). */
-    --brand-red:#D00C1A; --brand-red-ink:#FFFFFF;
+    /* Cores da marca PetroFusão (faixa do topo e rodapé; --accent já é o mesmo vermelho). */
+    --brand-red:var(--accent); --brand-red-ink:#FFFFFF;
     --brand-yellow:#F6C41A; --brand-yellow-ink:#1A1A1A;
   }
 
