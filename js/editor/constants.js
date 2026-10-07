@@ -9,7 +9,6 @@ export const FONTS = [
 ];
 export const MARGIN = 16;
 export const STORE_KEY = "laserMarkTemplates_v2";
-export const THEME_KEY = "laserMarkTheme_v1";
 export const LEFT_COLLAPSED_KEY = "laserMarkLeftCollapsed_v1";
 export const RIGHT_COLLAPSED_KEY = "laserMarkRightCollapsed_v1";
 export const EXPORT_TRANSPARENT_KEY = "laserMarkExportTransparent_v1";

@@ -13,7 +13,6 @@ import { createLayers } from "./editor/layers.js";
 import { createFieldOps } from "./editor/field-ops.js";
 import { createPropertiesPanel } from "./editor/properties-panel.js";
 import { createZoom } from "./editor/zoom.js";
-import { createTheme } from "./editor/theme.js";
 import { createTemplates } from "./editor/templates.js";
 import { createToolbar } from "./editor/toolbar.js";
 import { createKeyboard } from "./editor/keyboard.js";
@@ -73,7 +72,6 @@ export function initEditor(){
   Object.assign(ctx, createFieldOps(ctx));
   Object.assign(ctx, createPropertiesPanel(ctx));
   Object.assign(ctx, createZoom(ctx));
-  Object.assign(ctx, createTheme(ctx));
   Object.assign(ctx, createTemplates(ctx));
 
   const { exportSVG, exportRaster } = createExporter({
@@ -87,7 +85,6 @@ export function initEditor(){
   createKeyboard(ctx);
 
   // ================= INIT =================
-  ctx.initTheme();
   ctx.renderTemplateList();
   ctx.renderAll();
   ctx.commit();
