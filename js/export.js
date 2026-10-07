@@ -41,14 +41,19 @@ export function createExporter(deps){
     canvas.width = Math.round(state.plateW*k);
     canvas.height = Math.round(state.plateH*k);
     const ctx = canvas.getContext("2d");
-    if(!transparent){
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
+    if(!ctx){
+      showToast("Não consegui desenhar a imagem — alguma extensão do navegador pode estar bloqueando o canvas");
+      return;
     }
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "left";
 
     try{
+      if(!transparent){
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+      }
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "left";
+
       for(const f of state.fields){
         const cx = (f.x + (isBox(f) ? f.w/2 : 0))*k, cy = (f.y + (isBox(f) ? f.h/2 : 0))*k;
         ctx.save();
@@ -137,9 +142,19 @@ export function createExporter(deps){
 
     const ext = RASTER_EXT[format], mime = RASTER_MIME[format];
     const quality = format === "png" ? undefined : 0.92;
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, mime, quality));
-    if(!blob){ showToast(`Falha ao gerar o ${ext.toUpperCase()}`); return; }
-    download(blob, filename()+`-${effectiveDpi}dpi`+(transparent?"-transparente":"")+`.${ext}`);
+    let blob;
+    try{
+      blob = await new Promise(resolve => canvas.toBlob(resolve, mime, quality));
+    }catch(_){
+      blob = null;
+    }
+    if(!blob){ showToast(`Falha ao gerar o ${ext.toUpperCase()} — tente de novo ou desative extensões de privacidade/bloqueio`); return; }
+    try{
+      download(blob, filename()+`-${effectiveDpi}dpi`+(transparent?"-transparente":"")+`.${ext}`);
+    }catch(_){
+      showToast("Falha ao iniciar o download");
+      return;
+    }
     showToast(`${ext.toUpperCase()} ${effectiveDpi} DPI exportado`);
   }
 
