@@ -16,6 +16,7 @@ export function createExporter(deps){
   async function exportSVG(opts){
     const transparent = !!(opts && opts.transparent);
     if(!state.fields.length){ showToast("Nada para exportar ainda"); return; }
+    showToast("Gerando SVG…");
     await fontsReady();
     const out = document.createElementNS(SVGNS, "svg");
     out.setAttribute("xmlns", SVGNS);
@@ -115,6 +116,11 @@ export function createExporter(deps){
 
   const RASTER_MIME = {png:"image/png", jpeg:"image/jpeg", webp:"image/webp"};
   const RASTER_EXT = {png:"png", jpeg:"jpg", webp:"webp"};
+  // Acima disso, o canvas fica grande demais: trava o navegador (às vezes por
+  // minutos, sem nenhum aviso) ou estoura o limite de tamanho de canvas em
+  // alguns navegadores/celulares. Placas grandes em DPI alto são escaladas
+  // para caber nesse limite, com aviso.
+  const MAX_RASTER_DIM = 12000;
 
   // format: "png" | "jpeg" | "webp". JPEG não tem canal alfa — ignora
   // transparent e sempre desenha fundo branco, mesmo se pedido.
@@ -122,8 +128,16 @@ export function createExporter(deps){
     const requestTransparent = !!(opts && opts.transparent);
     const transparent = requestTransparent && format !== "jpeg";
     if(!state.fields.length){ showToast("Nada para exportar ainda"); return; }
+    showToast("Gerando imagem…");
     await fontsReady();
-    const k = dpi/25.4;
+    let k = dpi/25.4;
+    let effectiveDpi = dpi;
+    const rawDim = Math.max(state.plateW, state.plateH)*k;
+    if(rawDim > MAX_RASTER_DIM){
+      k *= MAX_RASTER_DIM/rawDim;
+      effectiveDpi = Math.round(k*25.4);
+      showToast(`Placa grande: resolução ajustada para ~${effectiveDpi} DPI para não travar o navegador`);
+    }
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(state.plateW*k);
     canvas.height = Math.round(state.plateH*k);
@@ -224,11 +238,10 @@ export function createExporter(deps){
 
     const ext = RASTER_EXT[format], mime = RASTER_MIME[format];
     const quality = format === "png" ? undefined : 0.92;
-    canvas.toBlob(blob => {
-      if(!blob){ showToast(`Falha ao gerar o ${ext.toUpperCase()}`); return; }
-      download(blob, filename()+`-${dpi}dpi`+(transparent?"-transparente":"")+`.${ext}`);
-      showToast(`${ext.toUpperCase()} ${dpi} DPI exportado`);
-    }, mime, quality);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, mime, quality));
+    if(!blob){ showToast(`Falha ao gerar o ${ext.toUpperCase()}`); return; }
+    download(blob, filename()+`-${effectiveDpi}dpi`+(transparent?"-transparente":"")+`.${ext}`);
+    showToast(`${ext.toUpperCase()} ${effectiveDpi} DPI exportado`);
   }
 
   function filename(){
