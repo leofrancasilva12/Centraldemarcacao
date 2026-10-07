@@ -1,20 +1,7 @@
 :root{
     --mono:'IBM Plex Mono','Roboto Mono',monospace;
     --disp:'Oswald',sans-serif;
-    --radius:6px; --topbar-h:54px; --tap:40px;
-  }
-  html[data-theme="dark"]{
-    --bg:#121417; --panel:#17191D; --panel-2:#1D2024;
-    --border:#262A2F; --border-soft:#1F2226;
-    --text:#ECEDEE; --text-dim:#91979E; --text-faint:#565C64;
-    --accent:#EFA83E; --accent-ink:#17120A; --accent-soft:rgba(239,168,62,.13);
-    --go:#3FB950; --go-ink:#07230D;
-    --danger:#E4614A;
-    --plate-bg:#EEEBE3; --plate-line:#D6D0C2; --plate-line-major:#B8B09C; --plate-ink:#14161A;
-    --shadow:none; --drawer-shadow:0 0 30px rgba(0,0,0,.5);
-    --menu-shadow:0 8px 28px rgba(0,0,0,.55);
-  }
-  html[data-theme="light"]{
+    --radius:6px; --topbar-h:54px; --tap:40px; --brand-banner-h:84px;
     --bg:#FAF9F6; --panel:#FFFFFF; --panel-2:#F3F1EC;
     --border:#E2DFD6; --border-soft:#EDEBE3;
     --text:#1C1E20; --text-dim:#6C7076; --text-faint:#9DA1A6;
@@ -24,6 +11,9 @@
     --plate-bg:#FFFFFF; --plate-line:#EAE7DE; --plate-line-major:#CFC9B9; --plate-ink:#14161A;
     --shadow:0 1px 3px rgba(20,20,15,.07); --drawer-shadow:0 0 30px rgba(0,0,0,.18);
     --menu-shadow:0 8px 28px rgba(20,20,15,.16);
+    /* Cores da marca PetroFusão (faixa do topo e rodapé). */
+    --brand-red:#D00C1A; --brand-red-ink:#FFFFFF;
+    --brand-yellow:#F6C41A; --brand-yellow-ink:#1A1A1A;
   }
 
   *{ box-sizing:border-box; }
@@ -36,13 +26,22 @@
   }
   button,input,select,textarea{ font-family:inherit; }
 
-  .app{ display:grid; grid-template-rows:auto 1fr; height:100vh; }
+  .app{ display:grid; grid-template-rows:auto auto 1fr auto; height:100vh; }
   @supports (height:100dvh){ .app{ height:100dvh; } }
 
+  /* Faixa vermelha com a animação da marca PetroFusão em loop. */
+  .brand-banner{
+    background:var(--brand-red); height:var(--brand-banner-h);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    padding-top:env(safe-area-inset-top); flex-shrink:0;
+  }
+  .brand-banner-video{ height:100%; width:auto; max-width:100%; display:block; object-fit:contain; }
+
   .app-footer{
-    position:fixed; left:50%; bottom:6px; transform:translateX(-50%); z-index:5;
-    font-size:10px; color:var(--text-faint); letter-spacing:.02em;
-    white-space:nowrap; pointer-events:none; user-select:none;
+    background:var(--brand-yellow); color:var(--brand-yellow-ink);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    padding:9px 12px calc(9px + env(safe-area-inset-bottom));
+    font-size:10.5px; font-weight:700; letter-spacing:.03em;
   }
 
   /* ================= MODO MANUTENÇÃO ================= */
@@ -71,7 +70,6 @@
   .topbar{
     display:flex; align-items:center; gap:9px;
     padding:0 12px; height:var(--topbar-h);
-    padding-top:env(safe-area-inset-top);
     background:var(--panel); border-bottom:1px solid var(--border-soft);
     flex-shrink:0; z-index:30;
   }
@@ -153,13 +151,6 @@
   .menu-check-row:hover{ background:var(--panel-2); }
   .menu-check-row input{ accent-color:var(--accent); width:15px; height:15px; flex-shrink:0; }
   .menu-check-row small{ display:block; color:var(--text-faint); font-size:9.5px; margin-top:2px; }
-
-  .theme-toggle{ display:flex; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; flex-shrink:0; }
-  .theme-toggle button{ width:34px; height:34px; display:flex; align-items:center; justify-content:center;
-    background:transparent; border:none; color:var(--text-faint); cursor:pointer; -webkit-tap-highlight-color:transparent; }
-  .theme-toggle button.active{ background:var(--accent-soft); color:var(--accent); }
-  .theme-toggle button svg{ width:15px; height:15px; }
-  .theme-toggle .div{ width:1px; background:var(--border); }
 
   .main{ display:grid; grid-template-columns:var(--left-w,230px) minmax(0,1fr) var(--right-w,230px);
     min-height:0; position:relative; transition:grid-template-columns .2s ease; }
@@ -410,7 +401,6 @@
     .mobile-history-btn{ display:inline-flex; min-width:86px; gap:6px; font-weight:600; }
     .mobile-history-btn svg{ width:16px; height:16px; }
 
-    .theme-toggle button{ width:30px; height:36px; }
     .btn-download{ min-height:40px; padding:0 10px; }
     .btn-download .dl-label{ display:none; }
     #btnOpenLeft, #btnOpenRight{ width:40px; height:40px; }
@@ -459,7 +449,6 @@
     .brand{ gap:0; }
     .brand-mark{ width:16px; height:16px; }
     .num-input{ width:42px; }
-    .theme-toggle button{ width:28px; }
     #btnOpenLeft, #btnOpenRight{ width:38px; height:40px; }
     .btn-download{ width:40px; padding:0; }
     .stage-toolbar .btn.small{ font-size:10px; padding-inline:9px; }
@@ -470,7 +459,6 @@
   @media (max-width:390px){
     .topbar{ gap:3px; padding-inline:4px; }
     .num-input{ width:40px; font-size:10.5px; }
-    .theme-toggle button{ width:27px; }
     #btnOpenLeft, #btnOpenRight{ width:36px; }
     .row2{ grid-template-columns:1fr; }
     .field-actions-row{ flex-direction:column; }
