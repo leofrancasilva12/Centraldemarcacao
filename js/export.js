@@ -1,7 +1,7 @@
-// Exportação SVG/PNG.
+// Exportação PNG/JPG.
 
 export function createExporter(deps){
-  const { state, SVGNS, XLINK, el, isBox, shownText, codeMatrix, loadTemplates, showToast } = deps;
+  const { state, isBox, shownText, codeMatrix, loadTemplates, showToast } = deps;
 
   async function fontsReady(){
     if(document.fonts && document.fonts.ready){ try{ await document.fonts.ready; }catch(_){} }
@@ -13,116 +13,15 @@ export function createExporter(deps){
     });
   }
 
-  async function exportSVG(opts){
-    const transparent = !!(opts && opts.transparent);
-    if(!state.fields.length){ showToast("Nada para exportar ainda"); return; }
-    showToast("Gerando SVG…");
-    await fontsReady();
-    const out = document.createElementNS(SVGNS, "svg");
-    out.setAttribute("xmlns", SVGNS);
-    out.setAttribute("xmlns:xlink", XLINK);
-    out.setAttribute("width", state.plateW+"mm");
-    out.setAttribute("height", state.plateH+"mm");
-    out.setAttribute("viewBox", `0 0 ${state.plateW} ${state.plateH}`);
-    if(!transparent) out.appendChild(el("rect", {x:0, y:0, width:state.plateW, height:state.plateH, fill:"#ffffff"}));
-
-    const INK = "#000000";
-    state.fields.forEach(f => {
-      const cx = f.x + (isBox(f) ? f.w/2 : 0), cy = f.y + (isBox(f) ? f.h/2 : 0);
-      const rot = `rotate(${f.rotation} ${cx} ${cy})`;
-
-      if(f.type === "text"){
-        const t = el("text", {x:f.x, y:f.y, "font-family":f.font.replace(/'/g,""),
-          "font-size":f.size, "font-weight":f.weight, "text-anchor":f.align,
-          "dominant-baseline":"middle", fill:INK,
-          transform:`rotate(${f.rotation} ${f.x} ${f.y})`});
-        t.style.letterSpacing = f.spacing+"mm";
-        t.textContent = shownText(f);
-        out.appendChild(t);
-        return;
-      }
-      if(f.type === "image"){
-        const img = el("image", {x:f.x, y:f.y, width:f.w, height:f.h, preserveAspectRatio:"none"});
-        img.setAttributeNS(XLINK, "href", f.src);
-        img.setAttribute("href", f.src);
-        let tr = rot;
-        if(f.flipH || f.flipV){
-          const sx = f.flipH?-1:1, sy = f.flipV?-1:1;
-          tr += ` translate(${cx} ${cy}) scale(${sx} ${sy}) translate(${-cx} ${-cy})`;
-        }
-        img.setAttribute("transform", tr);
-        out.appendChild(img);
-        return;
-      }
-      if(f.type === "shape"){
-        let n;
-        if(f.shape === "line") n = el("line", {x1:f.x, y1:f.y+f.h/2, x2:f.x+f.w, y2:f.y+f.h/2, stroke:INK, "stroke-width":f.stroke});
-        else if(f.shape === "rect") n = el("rect", {x:f.x, y:f.y, width:f.w, height:f.h, fill:INK});
-        else n = el("rect", {x:f.x+f.stroke/2, y:f.y+f.stroke/2,
-          width:Math.max(0.1,f.w-f.stroke), height:Math.max(0.1,f.h-f.stroke), fill:"none", stroke:INK, "stroke-width":f.stroke});
-        n.setAttribute("transform", rot);
-        out.appendChild(n);
-        return;
-      }
-      // code
-      const g = el("g", {transform:rot});
-      const data = codeMatrix(f);
-      if(!data) return;
-      if(f.codeKind === "qr"){
-        const quiet = f.quiet ? 4 : 0, total = data.size + quiet*2;
-        const side = Math.min(f.w, f.h), unit = side/total;
-        const ox = f.x + (f.w-side)/2, oy = f.y + (f.h-side)/2;
-        if(f.quiet) g.appendChild(el("rect", {x:ox, y:oy, width:side, height:side, fill:"#ffffff"}));
-        for(let r=0; r<data.size; r++){
-          let c = 0;
-          while(c < data.size){
-            if(data.modules[r][c]){
-              let len = 1;
-              while(c+len < data.size && data.modules[r][c+len]) len++;
-              g.appendChild(el("rect", {x:ox+(quiet+c)*unit, y:oy+(quiet+r)*unit,
-                width:len*unit, height:unit, fill:INK}));
-              c += len;
-            } else c++;
-          }
-        }
-      } else {
-        const textH = f.showText ? Math.min(f.h*0.22, 6) : 0;
-        const qU = f.quiet ? 10 : 0, totalU = data.length + qU*2;
-        const unit = f.w/totalU, barsH = f.h - textH, ox = f.x + qU*unit;
-        if(f.quiet) g.appendChild(el("rect", {x:f.x, y:f.y, width:f.w, height:f.h, fill:"#ffffff"}));
-        let i = 0;
-        while(i < data.length){
-          if(data[i] === "1"){
-            let len = 1;
-            while(i+len < data.length && data[i+len] === "1") len++;
-            g.appendChild(el("rect", {x:ox+i*unit, y:f.y, width:len*unit, height:barsH, fill:INK}));
-            i += len;
-          } else i++;
-        }
-        if(f.showText){
-          const t = el("text", {x:f.x+f.w/2, y:f.y+f.h-textH*0.15, "text-anchor":"middle",
-            fill:INK, "font-size":textH*0.85, "font-family":"IBM Plex Mono, monospace"});
-          t.textContent = f.codeKind === "code39" ? f.data.toUpperCase() : f.data;
-          g.appendChild(t);
-        }
-      }
-      out.appendChild(g);
-    });
-
-    const src = new XMLSerializer().serializeToString(out);
-    download(new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n'+src], {type:"image/svg+xml"}), filename()+(transparent?"-transparente":"")+".svg");
-    showToast("SVG exportado");
-  }
-
-  const RASTER_MIME = {png:"image/png", jpeg:"image/jpeg", webp:"image/webp"};
-  const RASTER_EXT = {png:"png", jpeg:"jpg", webp:"webp"};
+  const RASTER_MIME = {png:"image/png", jpeg:"image/jpeg"};
+  const RASTER_EXT = {png:"png", jpeg:"jpg"};
   // Acima disso, o canvas fica grande demais: trava o navegador (às vezes por
   // minutos, sem nenhum aviso) ou estoura o limite de tamanho de canvas em
   // alguns navegadores/celulares. Placas grandes em DPI alto são escaladas
   // para caber nesse limite, com aviso.
   const MAX_RASTER_DIM = 12000;
 
-  // format: "png" | "jpeg" | "webp". JPEG não tem canal alfa — ignora
+  // format: "png" | "jpeg". JPEG não tem canal alfa — ignora
   // transparent e sempre desenha fundo branco, mesmo se pedido.
   async function exportRaster(format, dpi, opts){
     const requestTransparent = !!(opts && opts.transparent);
@@ -258,5 +157,5 @@ export function createExporter(deps){
     setTimeout(() => URL.revokeObjectURL(url), 3000);
   }
 
-  return { exportSVG, exportRaster };
+  return { exportRaster };
 }
