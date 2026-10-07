@@ -90,6 +90,8 @@ export function createToolbar(ctx){
     try{
       if(fmt === "jpg") await ctx.exportRaster("jpeg", 300, {transparent});
       else await ctx.exportRaster("png", fmt === "png600" ? 600 : 300, {transparent});
+    } catch(_){
+      ctx.showToast("Falha inesperada ao exportar");
     } finally {
       btn.disabled = false;
     }
