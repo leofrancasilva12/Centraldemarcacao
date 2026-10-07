@@ -1,7 +1,7 @@
 :root{
     --mono:'IBM Plex Mono','Roboto Mono',monospace;
     --disp:'Oswald',sans-serif;
-    --radius:6px; --topbar-h:54px; --tap:40px; --brand-banner-h:84px;
+    --radius:6px; --topbar-h:54px; --tap:40px;
     --bg:#FAF9F6; --panel:#FFFFFF; --panel-2:#F3F1EC;
     --border:#E2DFD6; --border-soft:#EDEBE3;
     --text:#1C1E20; --text-dim:#6C7076; --text-faint:#9DA1A6;
@@ -11,8 +11,7 @@
     --plate-bg:#FFFFFF; --plate-line:#EAE7DE; --plate-line-major:#CFC9B9; --plate-ink:#14161A;
     --shadow:0 1px 3px rgba(20,20,15,.07); --drawer-shadow:0 0 30px rgba(0,0,0,.18);
     --menu-shadow:0 8px 28px rgba(20,20,15,.16);
-    /* Cores da marca PetroFusão (faixa do topo e rodapé; --accent já é o mesmo vermelho). */
-    --brand-red:var(--accent); --brand-red-ink:#FFFFFF;
+    /* Cor da marca PetroFusão usada no rodapé (o header usa --accent, o mesmo vermelho). */
     --brand-yellow:#F6C41A; --brand-yellow-ink:#1A1A1A;
   }
 
@@ -26,16 +25,8 @@
   }
   button,input,select,textarea{ font-family:inherit; }
 
-  .app{ display:grid; grid-template-rows:auto auto 1fr auto; height:100vh; }
+  .app{ display:grid; grid-template-rows:auto 1fr auto; height:100vh; }
   @supports (height:100dvh){ .app{ height:100dvh; } }
-
-  /* Faixa vermelha com a animação da marca PetroFusão em loop. */
-  .brand-banner{
-    background:var(--brand-red); height:var(--brand-banner-h);
-    display:flex; align-items:center; justify-content:center; overflow:hidden;
-    padding-top:env(safe-area-inset-top); flex-shrink:0;
-  }
-  .brand-banner-video{ height:100%; width:auto; max-width:100%; display:block; object-fit:contain; }
 
   .app-footer{
     background:var(--brand-yellow); color:var(--brand-yellow-ink);
@@ -69,7 +60,7 @@
 
   .topbar{
     display:flex; align-items:center; gap:9px;
-    padding:0 12px; height:var(--topbar-h);
+    padding:0 12px; padding-top:env(safe-area-inset-top); height:var(--topbar-h);
     background:var(--panel); border-bottom:1px solid var(--border-soft);
     flex-shrink:0; z-index:30;
   }
