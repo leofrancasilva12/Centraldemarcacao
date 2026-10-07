@@ -1,3 +1,5 @@
 import { initEditor } from "./editor.js";
+import { initUpdateCheck } from "./update-check.js";
 
-initEditor();
+const editor = initEditor();
+initUpdateCheck(editor);
